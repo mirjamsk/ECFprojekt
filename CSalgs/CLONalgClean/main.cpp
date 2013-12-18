@@ -5,8 +5,8 @@
  * 
  * this CLONALG implements: - static cloning :  n of the best antibodies are cloned beta time, making the size of the clones population  equal n*beta
  *							- inversely proportional hypermutation : better antibodies are mutated less
- *							- CLONALG2 - keeps best (1-d)*populationSize antibodies ( or all if the number of clones is less than that )
- *							- birthPhase where d * populationSize of new antibodies are randomly created and added to the population
+ *							- CLONALG1 - at new generation each antibody will be substituded by the best individual of its set of beta*population clones
+ *							- CLONALG2 - new generation will be formed by the best (1-d)*populationSize clones ( or all if the number of clones is less than that )- birthPhase where d * populationSize of new antibodies are randomly created and added to the population
  *							
  * CLONALG algorithm accepts only a single FloatingPoint genotype (vector of real values).
  */
@@ -22,7 +22,7 @@ protected:
 		double beta;			// parameter which determines the number of clones for every antibody
 		double c;				// da uzmem iz postojeceg mutation parametra mutation parametar
 		double d;				// fraction of population regenerated every generation
-		uint selectionScheme;	// specifies which selection scheme to use CLONALG1 or CLONALG2
+		string selectionScheme;	// specifies which selection scheme to use CLONALG1 or CLONALG2
 
 		// sort vector of antibodies in regards to their fitness
 		static bool sortPopulationByFitness (IndividualP ab1,IndividualP ab2) { return ( ab1->fitness->isBetterThan(ab2->fitness)); }
@@ -55,7 +55,7 @@ public:
 			registerParameter(state, "beta", (voidP) new double(0.1), ECF::DOUBLE);
 			registerParameter(state, "c", (voidP) new double(0.8), ECF::DOUBLE);
 			registerParameter(state, "d", (voidP) new double(0.0), ECF::DOUBLE);
-			registerParameter(state, "selectionScheme", (voidP) new uint(2), ECF::INT);
+			registerParameter(state, "selectionScheme", (voidP) new string("CLONALG2"), ECF::STRING);
 		}
 
         
@@ -103,9 +103,9 @@ public:
 				throw "";}
 
 			voidP selection_ = getParameterValue(state, "selectionScheme");
-			selectionScheme = *((uint*) selection_.get());
-			if( selectionScheme != 1 && selectionScheme != 2  ) {
-				ECF_LOG(state, 1, "Error: CLONALG requires parameter 'selectionScheme' to be either a '1' or a '2' value indicating selection scheme CLONALG1 or CLONALG2 respectively");
+			selectionScheme = *((string*) selection_.get());
+			if( selectionScheme != "CLONALG1" && selectionScheme != "CLONALG2"  ) {
+				ECF_LOG(state, 1, "Error: CLONALG requires parameter 'selectionScheme' to be either 'CLONALG1' or 'CLONALG2'");
 				throw "";}
 						
 
@@ -138,7 +138,7 @@ public:
         bool advanceGeneration(StateP state, DemeP deme)
         {	
 			  std::vector<IndividualP> clones;
-			  if (selectionScheme == 1 && state->getGenerationNo()== 0)
+			  if (selectionScheme == "CLONALG1" && state->getGenerationNo()== 0)
 				 markAntibodies(deme);
 			  cloningPhase(state, deme, clones);
 			  hypermutationPhase(state, deme, clones);
@@ -235,7 +235,7 @@ public:
 		
 		bool selectionPhase(StateP state, DemeP deme, std::vector<IndividualP> &clones)
 		{	
-			if( selectionScheme == 1) {
+			if( selectionScheme == "CLONALG1") {
 				uint selNumber = (uint)((1-d)*deme->getSize());
 				std::sort (clones.begin(), clones.end(), sortPopulationByParentAndFitness);
 			
@@ -270,6 +270,9 @@ public:
 		{	
 			//  birthNumber - number of new antibodies randomly created and added 
 			uint birthNumber = deme->getSize() - clones.size();
+			//mark the newAntibody's paretntAb 
+			uint mark = clones.size();
+
 
 			IndividualP newAntibody = copy(deme->at(0));
 			FloatingPointP flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (newAntibody->getGenotype(0));
@@ -278,6 +281,13 @@ public:
 				//create a random antibody
 				flp->initialize(state);
 				evaluate(newAntibody);
+
+				if (selectionScheme == "CLONALG1"){
+					//mark ab's parentAb
+					flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (newAntibody->getGenotype(1));
+					double &parentAb = flp->realValue[0];
+					parentAb = mark++;
+				}
 
 				//add it to the clones vector
 				clones.push_back(copy(newAntibody));
