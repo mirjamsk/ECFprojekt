@@ -115,21 +115,22 @@ public:
 				ECF_LOG_ERROR(state, "Error: CLONALG algorithm accepts only a FloatingPoint genotype!");
 				throw ("");
 			}
+			//add parentAntibody genotype
+			if( selectionScheme == "CLONALG1"){
+				FloatingPointP flpoint[2];
+				for(uint iGen = 1; iGen < 2; iGen++) {
+					flpoint[iGen] = (FloatingPointP) new FloatingPoint::FloatingPoint;
+					state->setGenotype(flpoint[iGen]);
 
-			FloatingPointP flpoint[2];
-			for(uint iGen = 1; iGen < 2; iGen++) {
-				flpoint[iGen] = (FloatingPointP) new FloatingPoint::FloatingPoint;
-				state->setGenotype(flpoint[iGen]);
+					flpoint[iGen]->setParameterValue(state, "dimension", (voidP) new uint(1));					
 
-				flpoint[iGen]->setParameterValue(state, "dimension", (voidP) new uint(1));					
-
-				// initial value of age parameter should be (or as close as possible to) 0				
-				flpoint[iGen]->setParameterValue(state, "lbound", (voidP) new double(0));
-				flpoint[iGen]->setParameterValue(state, "ubound", (voidP) new double(0.01));
-				
+					// initial value of age parameter should be (or as close as possible to) 0				
+					flpoint[iGen]->setParameterValue(state, "lbound", (voidP) new double(0));
+					flpoint[iGen]->setParameterValue(state, "ubound", (voidP) new double(0.01));
+					
+				}
+				ECF_LOG(state, 1, "CLONALG algorithm: added 1 FloatingPoint genotype (parentAntibody)");
 			}
-			ECF_LOG(state, 1, "CLONALG algorithm: added 1 FloatingPoint genotype (parentAntibody)");
-			
 
             return true;
         }
@@ -250,8 +251,7 @@ public:
 						j++;
 					}
 				}
-				clones = temp_clones;		
-			
+				clones = temp_clones;				
 			}
 
 
@@ -263,6 +263,7 @@ public:
 				if(selNumber < clones.size())
 					clones.erase (clones.begin()+ selNumber, clones.end());
 			}
+
 			return true;
 		}
 		
@@ -318,22 +319,22 @@ typedef boost::shared_ptr<MyAlg> MyAlgP;
 //function Ids: noiseless 1-24, noisy 101-130
 
 
-int main(int argc, char **argv)
-{
-	StateP state (new State);
-	//set newAlg
-	MyAlgP alg = (MyAlgP) new MyAlg;
-	state->addAlgorithm(alg);
-
-	// set the evaluation operator
-	state->setEvalOp(new FunctionMinEvalOp);
-	state->initialize(argc, argv);
-	state->run();
-	int i;
-	cin>>i;
-
-	return 0;
-}
+//int main(int argc, char **argv)
+//{
+//	StateP state (new State);
+//	//set newAlg
+//	MyAlgP alg = (MyAlgP) new MyAlg;
+//	state->addAlgorithm(alg);
+//
+//	// set the evaluation operator
+//	state->setEvalOp(new FunctionMinEvalOp);
+//	state->initialize(argc, argv);
+//	state->run();
+//	int i;
+//	cin>>i;
+//
+//	return 0;
+//}
 
 
 
@@ -342,64 +343,64 @@ int main(int argc, char **argv)
 // function Ids: noiseless 1-24, noisy 101-130
 //
 
-//int main(int argc, char **argv)
-//{
-//	// run for selected COCO functions
-//	for(uint function = 1; function < 25; function++) {
-//
-//		// read XML config
-//		std::ifstream fin(argv[1]);
-//		if (!fin) {
-//			throw std::string("Error opening file! ");
-//		}
-//
-//		std::string xmlFile, temp;
-//		while (!fin.eof()) {
-//			getline(fin, temp);
-//			xmlFile += "\n" + temp;
-//		}
-//		fin.close();
-//
-//		// set log and stats parameters
-//		std::string funcName = uint2str(function);
-//		std::string logName = "log", statsName = "stats";
-//		if(function < 10) {
-//			logName += "0";
-//			statsName += "0";
-//		}
-//		logName += uint2str(function) + ".txt";
-//		statsName += uint2str(function) + ".txt";
-//
-//		// update in XML
-//		XMLResults results;
-//		XMLNode xConfig = XMLNode::parseString(xmlFile.c_str(), "ECF", &results);
-//		XMLNode registry = xConfig.getChildNode("Registry");
-//
-//		XMLNode func = registry.getChildNodeWithAttribute("Entry", "key", "coco.function");
-//		func.updateText(funcName.c_str());
-//		XMLNode log = registry.getChildNodeWithAttribute("Entry", "key", "log.filename");
-//		log.updateText(logName.c_str());
-//		XMLNode stats = registry.getChildNodeWithAttribute("Entry", "key", "batch.statsfile");
-//		stats.updateText(statsName.c_str());
-//
-//		// write back
-//		std::ofstream fout(argv[1]);
-//		fout << xConfig.createXMLString(true);
-//		fout.close();
-//
-//
-//		// finally, run ECF on single function
-//		StateP state (new State);
-//
-//		//set newAlg
-//		MyAlgP alg = (MyAlgP) new MyAlg;
-//		state->addAlgorithm(alg);
-//		// set the evaluation operator
-//		state->setEvalOp(new FunctionMinEvalOp);
-//
-//		state->initialize(argc, argv);
-//		state->run();
-//	}
-//
-//	return 0;
-//}
+int main(int argc, char **argv)
+{
+	// run for selected COCO functions
+	for(uint function = 1; function < 25; function++) {
+
+		// read XML config
+		std::ifstream fin(argv[1]);
+		if (!fin) {
+			throw std::string("Error opening file! ");
+		}
+
+		std::string xmlFile, temp;
+		while (!fin.eof()) {
+			getline(fin, temp);
+			xmlFile += "\n" + temp;
+		}
+		fin.close();
+
+		// set log and stats parameters
+		std::string funcName = uint2str(function);
+		std::string logName = "log", statsName = "stats";
+		if(function < 10) {
+			logName += "0";
+			statsName += "0";
+		}
+		logName += uint2str(function) + ".txt";
+		statsName += uint2str(function) + ".txt";
+
+		// update in XML
+		XMLResults results;
+		XMLNode xConfig = XMLNode::parseString(xmlFile.c_str(), "ECF", &results);
+		XMLNode registry = xConfig.getChildNode("Registry");
+
+		XMLNode func = registry.getChildNodeWithAttribute("Entry", "key", "coco.function");
+		func.updateText(funcName.c_str());
+		XMLNode log = registry.getChildNodeWithAttribute("Entry", "key", "log.filename");
+		log.updateText(logName.c_str());
+		XMLNode stats = registry.getChildNodeWithAttribute("Entry", "key", "batch.statsfile");
+		stats.updateText(statsName.c_str());
+
+		// write back
+		std::ofstream fout(argv[1]);
+		fout << xConfig.createXMLString(true);
+		fout.close();
+
+
+		// finally, run ECF on single function
+		StateP state (new State);
+
+		//set newAlg
+		MyAlgP alg = (MyAlgP) new MyAlg;
+		state->addAlgorithm(alg);
+		// set the evaluation operator
+		state->setEvalOp(new FunctionMinEvalOp);
+
+		state->initialize(argc, argv);
+		state->run();
+	}
+
+	return 0;
+}
