@@ -18,14 +18,28 @@ protected:
 		double lbound;
 		uint dimension;
 
-		uint n;			// number of antibodies cloned every generation
-		double beta;	// parameter which determines the number of clones for every antibody
-		double c;		// da uzmem iz postojeceg mutation parametra mutation parametar
-		double d;		// fraction of population regenerated every generation
-		
+		uint n;					// number of antibodies cloned every generation
+		double beta;			// parameter which determines the number of clones for every antibody
+		double c;				// da uzmem iz postojeceg mutation parametra mutation parametar
+		double d;				// fraction of population regenerated every generation
+		uint selectionScheme;	// specifies which selection scheme to use CLONALG1 or CLONALG2
 
 		// sort vector of antibodies in regards to their fitness
 		static bool sortPopulationByFitness (IndividualP ab1,IndividualP ab2) { return ( ab1->fitness->isBetterThan(ab2->fitness)); }
+
+		// sort vector of antibodies first by their antibody parents and then to their fitness
+		static bool sortPopulationByParentAndFitness (IndividualP ab1,IndividualP ab2) 
+		{ 
+			FloatingPointP flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (ab1->getGenotype(1));
+			double &parentAb1 = flp->realValue[0];
+			flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (ab2->getGenotype(1));
+			double &parentAb2 = flp->realValue[0];
+
+			if (parentAb1 <parentAb2) return true;
+			if (parentAb1 == parentAb2) return (ab1->fitness->isBetterThan(ab2->fitness));
+	
+			return false;
+		}
 
 public:
         
@@ -41,6 +55,7 @@ public:
 			registerParameter(state, "beta", (voidP) new double(0.1), ECF::DOUBLE);
 			registerParameter(state, "c", (voidP) new double(0.8), ECF::DOUBLE);
 			registerParameter(state, "d", (voidP) new double(0.0), ECF::DOUBLE);
+			registerParameter(state, "selectionScheme", (voidP) new uint(2), ECF::INT);
 		}
 
         
@@ -86,6 +101,12 @@ public:
 			if( d<0 || d>1 ) {
 				ECF_LOG(state, 1, "Error: CLONALG requires parameter 'd' to be a double in range [ 0, 1] ");
 				throw "";}
+
+			voidP selection_ = getParameterValue(state, "selectionScheme");
+			selectionScheme = *((uint*) selection_.get());
+			if( selectionScheme != 1 && selectionScheme != 2  ) {
+				ECF_LOG(state, 1, "Error: CLONALG requires parameter 'selectionScheme' to be either a '1' or a '2' value indicating selection scheme CLONALG1 or CLONALG2 respectively");
+				throw "";}
 						
 
 		    // algorithm accepts a single FloatingPoint Genotype
@@ -95,6 +116,21 @@ public:
 				throw ("");
 			}
 
+			FloatingPointP flpoint[2];
+			for(uint iGen = 1; iGen < 2; iGen++) {
+				flpoint[iGen] = (FloatingPointP) new FloatingPoint::FloatingPoint;
+				state->setGenotype(flpoint[iGen]);
+
+				flpoint[iGen]->setParameterValue(state, "dimension", (voidP) new uint(1));					
+
+				// initial value of age parameter should be (or as close as possible to) 0				
+				flpoint[iGen]->setParameterValue(state, "lbound", (voidP) new double(0));
+				flpoint[iGen]->setParameterValue(state, "ubound", (voidP) new double(0.01));
+				
+			}
+			ECF_LOG(state, 1, "CLONALG algorithm: added 1 FloatingPoint genotype (parentAntibody)");
+			
+
             return true;
         }
 
@@ -102,6 +138,8 @@ public:
         bool advanceGeneration(StateP state, DemeP deme)
         {	
 			  std::vector<IndividualP> clones;
+			  if (selectionScheme == 1 && state->getGenerationNo()== 0)
+				 markAntibodies(deme);
 			  cloningPhase(state, deme, clones);
 			  hypermutationPhase(state, deme, clones);
 			  selectionPhase(state, deme, clones);
@@ -111,13 +149,26 @@ public:
               return true;
         }
 		
+		
+		bool markAntibodies(DemeP deme){
+			//mark antibodies so the alg can know which clone belongs to which parent Antibody
+			for( uint i = 0; i < deme->getSize(); i++ ) { // for each antibody
+			
+					FloatingPointP flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (deme->at(i)->getGenotype(1));
+					double &parentAb = flp->realValue[0];
+					parentAb = i;				
+			}
+			return true;
+		}
+
 		bool cloningPhase(StateP state, DemeP deme, std::vector<IndividualP> &clones)
 		{	
 			// calculate number of clones per antibody
 			uint clonesPerAntibody = beta * deme->getSize();
 
 			// storing all antibodies in a vector
-			for( uint i = 0; i < deme->getSize(); i++ ) { // for each antibody
+			for( uint i = 0; i < deme->getSize(); i++ ) { // for each antibody	
+				
 				IndividualP antibody = deme->at(i);
 				clones.push_back(antibody);
 			}
@@ -184,13 +235,34 @@ public:
 		
 		bool selectionPhase(StateP state, DemeP deme, std::vector<IndividualP> &clones)
 		{	
-			std::sort (clones.begin(), clones.end(), sortPopulationByFitness);
-			uint selNumber = (uint)((1-d)*deme->getSize());
-
-			//keep best (1-d)*populationSize antibodies ( or all if the number of clones is less than that )
-			if(selNumber < clones.size())
-				clones.erase (clones.begin()+ selNumber, clones.end());
+			if( selectionScheme == 1) {
+				uint selNumber = (uint)((1-d)*deme->getSize());
+				std::sort (clones.begin(), clones.end(), sortPopulationByParentAndFitness);
 			
+				int j=0;
+				std::vector<IndividualP> temp_clones;
+
+				for (uint i = 0; i < clones.size(); i++){
+					FloatingPointP flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (clones.at(i)->getGenotype(1));
+					double &parentAb = flp->realValue[0];
+					if (j == parentAb && j < selNumber){
+						temp_clones.push_back(clones.at(i));
+						j++;
+					}
+				}
+				clones = temp_clones;		
+			
+			}
+
+
+			else{
+				std::sort (clones.begin(), clones.end(), sortPopulationByFitness);
+				uint selNumber = (uint)((1-d)*deme->getSize());
+
+				//keep best (1-d)*populationSize antibodies ( or all if the number of clones is less than that )
+				if(selNumber < clones.size())
+					clones.erase (clones.begin()+ selNumber, clones.end());
+			}
 			return true;
 		}
 		
@@ -236,22 +308,22 @@ typedef boost::shared_ptr<MyAlg> MyAlgP;
 //function Ids: noiseless 1-24, noisy 101-130
 
 
-//int main(int argc, char **argv)
-//{
-//	StateP state (new State);
-//	//set newAlg
-//	MyAlgP alg = (MyAlgP) new MyAlg;
-//	state->addAlgorithm(alg);
-//
-//	// set the evaluation operator
-//	state->setEvalOp(new FunctionMinEvalOp);
-//	state->initialize(argc, argv);
-//	state->run();
-//	int i;
-//	cin>>i;
-//
-//	return 0;
-//}
+int main(int argc, char **argv)
+{
+	StateP state (new State);
+	//set newAlg
+	MyAlgP alg = (MyAlgP) new MyAlg;
+	state->addAlgorithm(alg);
+
+	// set the evaluation operator
+	state->setEvalOp(new FunctionMinEvalOp);
+	state->initialize(argc, argv);
+	state->run();
+	int i;
+	cin>>i;
+
+	return 0;
+}
 
 
 
@@ -260,64 +332,64 @@ typedef boost::shared_ptr<MyAlg> MyAlgP;
 // function Ids: noiseless 1-24, noisy 101-130
 //
 
-int main(int argc, char **argv)
-{
-	// run for selected COCO functions
-	for(uint function = 1; function < 25; function++) {
-
-		// read XML config
-		std::ifstream fin(argv[1]);
-		if (!fin) {
-			throw std::string("Error opening file! ");
-		}
-
-		std::string xmlFile, temp;
-		while (!fin.eof()) {
-			getline(fin, temp);
-			xmlFile += "\n" + temp;
-		}
-		fin.close();
-
-		// set log and stats parameters
-		std::string funcName = uint2str(function);
-		std::string logName = "log", statsName = "stats";
-		if(function < 10) {
-			logName += "0";
-			statsName += "0";
-		}
-		logName += uint2str(function) + ".txt";
-		statsName += uint2str(function) + ".txt";
-
-		// update in XML
-		XMLResults results;
-		XMLNode xConfig = XMLNode::parseString(xmlFile.c_str(), "ECF", &results);
-		XMLNode registry = xConfig.getChildNode("Registry");
-
-		XMLNode func = registry.getChildNodeWithAttribute("Entry", "key", "coco.function");
-		func.updateText(funcName.c_str());
-		XMLNode log = registry.getChildNodeWithAttribute("Entry", "key", "log.filename");
-		log.updateText(logName.c_str());
-		XMLNode stats = registry.getChildNodeWithAttribute("Entry", "key", "batch.statsfile");
-		stats.updateText(statsName.c_str());
-
-		// write back
-		std::ofstream fout(argv[1]);
-		fout << xConfig.createXMLString(true);
-		fout.close();
-
-
-		// finally, run ECF on single function
-		StateP state (new State);
-
-		//set newAlg
-		MyAlgP alg = (MyAlgP) new MyAlg;
-		state->addAlgorithm(alg);
-		// set the evaluation operator
-		state->setEvalOp(new FunctionMinEvalOp);
-
-		state->initialize(argc, argv);
-		state->run();
-	}
-
-	return 0;
-}
+//int main(int argc, char **argv)
+//{
+//	// run for selected COCO functions
+//	for(uint function = 1; function < 25; function++) {
+//
+//		// read XML config
+//		std::ifstream fin(argv[1]);
+//		if (!fin) {
+//			throw std::string("Error opening file! ");
+//		}
+//
+//		std::string xmlFile, temp;
+//		while (!fin.eof()) {
+//			getline(fin, temp);
+//			xmlFile += "\n" + temp;
+//		}
+//		fin.close();
+//
+//		// set log and stats parameters
+//		std::string funcName = uint2str(function);
+//		std::string logName = "log", statsName = "stats";
+//		if(function < 10) {
+//			logName += "0";
+//			statsName += "0";
+//		}
+//		logName += uint2str(function) + ".txt";
+//		statsName += uint2str(function) + ".txt";
+//
+//		// update in XML
+//		XMLResults results;
+//		XMLNode xConfig = XMLNode::parseString(xmlFile.c_str(), "ECF", &results);
+//		XMLNode registry = xConfig.getChildNode("Registry");
+//
+//		XMLNode func = registry.getChildNodeWithAttribute("Entry", "key", "coco.function");
+//		func.updateText(funcName.c_str());
+//		XMLNode log = registry.getChildNodeWithAttribute("Entry", "key", "log.filename");
+//		log.updateText(logName.c_str());
+//		XMLNode stats = registry.getChildNodeWithAttribute("Entry", "key", "batch.statsfile");
+//		stats.updateText(statsName.c_str());
+//
+//		// write back
+//		std::ofstream fout(argv[1]);
+//		fout << xConfig.createXMLString(true);
+//		fout.close();
+//
+//
+//		// finally, run ECF on single function
+//		StateP state (new State);
+//
+//		//set newAlg
+//		MyAlgP alg = (MyAlgP) new MyAlg;
+//		state->addAlgorithm(alg);
+//		// set the evaluation operator
+//		state->setEvalOp(new FunctionMinEvalOp);
+//
+//		state->initialize(argc, argv);
+//		state->run();
+//	}
+//
+//	return 0;
+//}
