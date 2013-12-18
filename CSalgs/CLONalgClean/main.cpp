@@ -5,10 +5,13 @@
  * 
  * this CLONALG implements: - static cloning :  n of the best antibodies are cloned beta time, making the size of the clones population  equal n*beta
  *							- inversely proportional hypermutation : better antibodies are mutated less
+
  *							- CLONALG2 - keeps best (1-d)*populationSize antibodies ( or all if the number of clones is less than that )
  *							- birthPhase where d * populationSize of new antibodies are randomly created and added to the population
  *							
  * CLONALG algorithm accepts only a single FloatingPoint genotype (vector of real values).
+ * Additionally, it adds the following genotype for algorithm implementation:
+ * - FloatingPoint genotype as antibody age (a cycle counter for each individual)
  */
 class MyAlg : public Algorithm
 {
@@ -20,7 +23,7 @@ protected:
 
 		uint n;			// number of antibodies cloned every generation
 		double beta;	// parameter which determines the number of clones for every antibody
-		double c;		// da uzmem iz postojeceg mutation parametra mutation parametar
+		double c;		// parameter which determines the hypermutation rate
 		double d;		// fraction of population regenerated every generation
 		
 

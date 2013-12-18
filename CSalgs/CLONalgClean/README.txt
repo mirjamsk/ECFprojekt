@@ -5,7 +5,9 @@ CLONAL algorithm for ECFramework
  * this CLONALG implements:
 	- static cloning :  n of the best antibodies are cloned beta time, making the size of the clones population  equal n*beta
  	- inversely proportional hypermutation : better antibodies are mutated less
+	- CLONALG1 - each antibody in generation will be substituted by the best individual of its set of beta*populationSize mutated clones
  	- CLONALG2 - keeps best (1-d)*populationSize antibodies ( or all if the number of clones is less than that )
+		
 	- birthPhase where d * populationSize of new antibodies are randomly created and added to the population
  	
  *
