@@ -5,8 +5,10 @@
  * 
  * ABC algorithm accepts only a single FloatingPoint genotype (vector of real values).
  * Additionally, it adds the following genotype for algorithm implementation:
- * - FloatingPoint genotype as trial (a cycle counter for each individual)
+ * 		- trial: floatingPoint genotype serving as a generation counter for each individual
+ *		- probability: floatingPoint genotype for calculating the probability of getting chosen for each individual
  */
+
 class MyAlg : public Algorithm
 {
 protected:
