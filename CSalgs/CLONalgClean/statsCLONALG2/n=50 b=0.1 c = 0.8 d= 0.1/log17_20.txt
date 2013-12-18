@@ -1,0 +1,63 @@
+Running in batch mode: run 20/30
+Start time: Wed Dec 18 01:48:41 2013
+
+Evaluating initial population...
+Generation: 0
+Elapsed time: 0
+Deme: 0
+Evaluations: 50
+Stats: fitness
+	max: 1.15021e+010
+	min: 23855.9
+	avg: 2.47375e+008
+	stdev: 1.62579e+009
+
+Generation: 1
+Elapsed time: 0
+Deme: 0
+Evaluations: 355
+Stats: fitness
+	max: 8.20159e+007
+	min: 20126.4
+	avg: 1.69467e+006
+	stdev: 1.1591e+007
+
+Generation: 100
+Elapsed time: 1
+Deme: 0
+Evaluations: 30550
+Stats: fitness
+	max: 5.68959e+006
+	min: 3.3488
+	avg: 139505
+	stdev: 807028
+
+Generation: 200
+Elapsed time: 1
+Deme: 0
+Evaluations: 61050
+Stats: fitness
+	max: 3.31435e+008
+	min: 3.60617
+	avg: 7.9151e+006
+	stdev: 4.75052e+007
+
+Generation: 300
+Elapsed time: 2
+Deme: 0
+Evaluations: 91550
+Stats: fitness
+	max: 1.86699e+009
+	min: 3.39121
+	avg: 3.74432e+007
+	stdev: 2.64018e+008
+
+
+Best of run: 
+<HallOfFame size="1">
+	<Individual size="1" gen="125">
+		<FitnessMin value="1.34077"/>
+		<FloatingPoint size="10">	3.67829	2.06532	-3.13929	0.610932	2.31539	-1.82971	3.69842	-3.28421	-0.852458	-1.96989</FloatingPoint>
+	</Individual>
+</HallOfFame>
+
