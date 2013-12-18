@@ -13,4 +13,4 @@ CLONAL algorithm for ECFramework
 
 =============================
 important: main.cpp is from ECF_1.3/examples/COCO/
-it does not implement AGING!
+it does not implement AGING! 
