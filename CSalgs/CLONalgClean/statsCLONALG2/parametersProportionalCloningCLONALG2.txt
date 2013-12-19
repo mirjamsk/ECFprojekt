@@ -1,0 +1,31 @@
+<ECF>
+	<Algorithm>
+		<MyAlg>
+			<Entry key="n">100</Entry>
+			<Entry key="beta">1</Entry>
+			<Entry key="c">0.1</Entry>
+			<Entry key="d">0.1</Entry>
+			<Entry key="cloningVersion">proportional</Entry>
+			<Entry key="selectionScheme">CLONALG2</Entry>
+		</MyAlg>
+	</Algorithm>
+	<Genotype>
+		<FloatingPoint>
+			<Entry key="lbound">-50</Entry>
+			<Entry key="ubound">50</Entry>
+			<Entry key="dimension">10</Entry>
+		</FloatingPoint>
+	</Genotype>
+	<Registry>
+		<Entry key="coco.function">1</Entry>
+		<!-- sets the COCO objective function (default: 1) -->
+		<Entry key="population.size">100</Entry>
+		<Entry key="term.maxgen">10000</Entry>
+		<Entry key="term.eval">100000</Entry>
+		<Entry key="log.frequency">100</Entry>
+		<Entry key="log.level">3</Entry>
+		<Entry key="log.filename">log01.txt</Entry>
+		<Entry key="batch.repeats">30</Entry>
+		<Entry key="batch.statsfile">stats01.txt</Entry>
+	</Registry>
+</ECF>
