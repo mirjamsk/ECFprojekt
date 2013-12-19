@@ -201,8 +201,8 @@ public:
 
 				//proportional cloning 
 				else{ 
-					uint scaledNumberofClones = clonesPerAntibody/(i+1);
-					for (uint j = 0; j < scaledNumberofClones ; j++) 
+					uint proportionalCloneNo = clonesPerAntibody/(i+1);
+					for (uint j = 0; j < proportionalCloneNo ; j++) 
 						clones.push_back(copy(antibody));
 				}
 		    }
@@ -211,13 +211,17 @@ public:
 		}
 
 		bool hypermutationPhase(StateP state, DemeP deme, std::vector<IndividualP> &clones)
-		{	
-			// calculate number of clones per antibody
-			uint clonesPerAntibody = beta * deme->getSize() +1;
-			
+		{			
 			uint M;	// M - number of mutations of a single antibody 
 			uint k;
 
+			// calculate number of clones per antibody
+			uint clonesPerAntibody = beta * deme->getSize();
+
+			// these get used in case of proportional cloning
+			uint counter = 0;		
+			uint parentIndex = 0;
+			
 			for( uint i = 0; i < clones.size(); i++ ){ // for each antibody in vector clones
 				IndividualP antibody = clones.at(i);
 				
@@ -225,10 +229,17 @@ public:
 			    std::vector< double > &antibodyVars = flp->realValue;
 				
 				// inversely proportional hypermutation (better antibodies are mutated less)
-				k = i/clonesPerAntibody +1;
+				if (cloningVersion == "static")
+					k = 1+ i/(clonesPerAntibody +1);
+				else{
+					if (counter == i){
+						parentIndex++;
+						counter += 1 + clonesPerAntibody/parentIndex;}					
+					k = parentIndex;
+				}
+
 				M = (int) ((1- 1/(double)(k)) * (c*dimension) + (c*dimension));
-				
-				
+								
 				// mutate M times
 				for (uint j = 0; j < M; j++){
 					uint param = state->getRandomizer()->getRandomInteger((int)antibodyVars.size());
