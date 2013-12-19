@@ -4,6 +4,7 @@
  * \brief Clonal Selection Algorithm (see e.g. http://en.wikipedia.org/wiki/Clonal_Selection_Algorithm)
  * 
  * this CLONALG implements: - static cloning :  n of the best antibodies are cloned beta time, making the size of the clones population  equal n*beta
+ *							- proportional cloning: number of clones per antibody is proportional to that ab's fitness
  *							- inversely proportional hypermutation : better antibodies are mutated less
  *							- CLONALG1 - at new generation each antibody will be substituded by the best individual of its set of beta*population clones
  *							- CLONALG2 - new generation will be formed by the best (1-d)*populationSize clones ( or all if the number of clones is less than that )- birthPhase where d * populationSize of new antibodies are randomly created and added to the population
@@ -22,6 +23,7 @@ protected:
 		double beta;			// parameter which determines the number of clones for every antibody
 		double c;				// da uzmem iz postojeceg mutation parametra mutation parametar
 		double d;				// fraction of population regenerated every generation
+		string cloningVersion;	// specifies whether to use static or proportional cloning
 		string selectionScheme;	// specifies which selection scheme to use CLONALG1 or CLONALG2
 
 		// sort vector of antibodies in regards to their fitness
@@ -55,6 +57,7 @@ public:
 			registerParameter(state, "beta", (voidP) new double(0.1), ECF::DOUBLE);
 			registerParameter(state, "c", (voidP) new double(0.8), ECF::DOUBLE);
 			registerParameter(state, "d", (voidP) new double(0.0), ECF::DOUBLE);
+			registerParameter(state, "cloningVersion", (voidP) new string("static"), ECF::STRING);
 			registerParameter(state, "selectionScheme", (voidP) new string("CLONALG2"), ECF::STRING);
 		}
 
@@ -100,6 +103,12 @@ public:
 			d = *((double*) d_.get());
 			if( d<0 || d>1 ) {
 				ECF_LOG(state, 1, "Error: CLONALG requires parameter 'd' to be a double in range [ 0, 1] ");
+				throw "";}
+
+			voidP cloning_ = getParameterValue(state, "cloningVersion");
+			cloningVersion = *((string*) cloning_.get());
+			if( cloningVersion != "static" && cloningVersion != "proportional"  ) {
+				ECF_LOG(state, 1, "Error: CLONALG requires parameter 'cloningVersion' to be either 'static' or a 'proportional'");
 				throw "";}
 
 			voidP selection_ = getParameterValue(state, "selectionScheme");
@@ -180,12 +189,22 @@ public:
 			// leaving n best antibodies for cloning
 			clones.erase (clones.begin()+n,clones.end());
 
-			//static cloning : cloning each antibody beta*populationSize times
+			
 			for( uint i = 0; i < n; i++ ){ // for each antibody in clones vector
 				IndividualP antibody = clones.at(i);
 			
-				for (uint j = 0; j < clonesPerAntibody; j++) 
-					clones.push_back(copy(antibody));
+				//static cloning : cloning each antibody beta*populationSize times
+				if (cloningVersion == "static"){
+					for (uint j = 0; j < clonesPerAntibody; j++) 
+						clones.push_back(copy(antibody));
+				}
+
+				//proportional cloning 
+				else{ 
+					uint scaledNumberofClones = clonesPerAntibody/(i+1);
+					for (uint j = 0; j < scaledNumberofClones ; j++) 
+						clones.push_back(copy(antibody));
+				}
 		    }
 			
 			return true;
