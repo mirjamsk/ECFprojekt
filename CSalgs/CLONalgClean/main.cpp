@@ -151,7 +151,7 @@ public:
         bool advanceGeneration(StateP state, DemeP deme)
         {	
 			  std::vector<IndividualP> clones;
-			  if (selectionScheme == "CLONALG1" && state->getGenerationNo()== 0)
+			  if (selectionScheme == "CLONALG1")
 				 markAntibodies(deme);
 			  cloningPhase(state, deme, clones);
 			  hypermutationPhase(state, deme, clones);
@@ -166,7 +166,7 @@ public:
 		bool markAntibodies(DemeP deme){
 			//mark antibodies so the alg can know which clone belongs to which parent Antibody
 			for( uint i = 0; i < deme->getSize(); i++ ) { // for each antibody
-			
+
 					FloatingPointP flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (deme->at(i)->getGenotype(1));
 					double &parentAb = flp->realValue[0];
 					parentAb = i;				
@@ -277,23 +277,21 @@ public:
 				for (uint i = 0; i < clones.size(); i++){
 					FloatingPointP flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (clones.at(i)->getGenotype(1));
 					double &parentAb = flp->realValue[0];
-					if (j == parentAb && j < selNumber){
+					if (j == parentAb && j < deme->getSize()){
 						temp_clones.push_back(clones.at(i));
 						j++;
 					}
 				}
 				clones = temp_clones;				
 			}
+	
+			std::sort (clones.begin(), clones.end(), sortPopulationByFitness);
+			uint selNumber = (uint)((1-d)*deme->getSize());
 
-
-			else{
-				std::sort (clones.begin(), clones.end(), sortPopulationByFitness);
-				uint selNumber = (uint)((1-d)*deme->getSize());
-
-				//keep best (1-d)*populationSize antibodies ( or all if the number of clones is less than that )
-				if(selNumber < clones.size())
-					clones.erase (clones.begin()+ selNumber, clones.end());
-			}
+			//keep best (1-d)*populationSize antibodies ( or all if the number of clones is less than that )
+			if(selNumber < clones.size())
+				clones.erase (clones.begin()+ selNumber, clones.end());
+			
 
 			return true;
 		}
@@ -302,10 +300,7 @@ public:
 		{	
 			//  birthNumber - number of new antibodies randomly created and added 
 			uint birthNumber = deme->getSize() - clones.size();
-			//mark the newAntibody's paretntAb 
-			uint mark = clones.size();
-
-
+			
 			IndividualP newAntibody = copy(deme->at(0));
 			FloatingPointP flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (newAntibody->getGenotype(0));
 
@@ -313,13 +308,6 @@ public:
 				//create a random antibody
 				flp->initialize(state);
 				evaluate(newAntibody);
-
-				if (selectionScheme == "CLONALG1"){
-					//mark ab's parentAb
-					flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (newAntibody->getGenotype(1));
-					double &parentAb = flp->realValue[0];
-					parentAb = mark++;
-				}
 
 				//add it to the clones vector
 				clones.push_back(copy(newAntibody));
