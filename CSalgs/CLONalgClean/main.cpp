@@ -58,7 +58,7 @@ public:
         {	
 			registerParameter(state, "n", (voidP) new uint(50), ECF::INT);
 			registerParameter(state, "beta", (voidP) new double(0.1), ECF::DOUBLE);
-			registerParameter(state, "c", (voidP) new double(0.8), ECF::DOUBLE);
+			registerParameter(state, "c", (voidP) new double(0.2), ECF::DOUBLE);
 			registerParameter(state, "d", (voidP) new double(0.0), ECF::DOUBLE);
 			registerParameter(state, "cloningVersion", (voidP) new string("static"), ECF::STRING);
 			registerParameter(state, "selectionScheme", (voidP) new string("CLONALG2"), ECF::STRING);
@@ -237,7 +237,8 @@ public:
 				else{
 					if (counter == i){
 						parentIndex++;
-						counter += 1 + clonesPerAntibody/parentIndex;}					
+						counter += 1 + clonesPerAntibody/parentIndex;
+					}					
 					k = parentIndex;
 				}
 
@@ -259,10 +260,7 @@ public:
 					//produce a mutation on the antibody 
 					antibodyVars[param] = value;
 				}
-				
-				FitnessP originalFitness = antibody->fitness;
 				evaluate(antibody);
-
 			}		
 			return true;
 		}
