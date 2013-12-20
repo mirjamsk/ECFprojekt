@@ -3,12 +3,16 @@
 /**
  * \brief Clonal Selection Algorithm (see e.g. http://en.wikipedia.org/wiki/Clonal_Selection_Algorithm)
  * 
- * this CLONALG implements: - static cloning :  n of the best antibodies are cloned beta time, making the size of the clones population  equal n*beta
- *							- inversely proportional hypermutation : better antibodies are mutated less
- *							- CLONALG1 - at new generation each antibody will be substituded by the best individual of its set of beta*population clones
- *							- CLONALG2 - new generation will be formed by the best (1-d)*populationSize clones ( or all if the number of clones is less than that )- birthPhase where d * populationSize of new antibodies are randomly created and added to the population
+ * this CLONALG implements: 
+ *			- cloning Versions:	- static cloning :  n of the best antibodies are cloned beta*populationSize times
+ *								- proportional cloning: number of clones per antibody is proportional to that ab's fitness
+ *			- inversely proportional hypermutation : better antibodies are mutated less
+ *			- selectionSchemes:	- CLONALG1 - at new generation each antibody will be substituded by the best individual of its set of beta*population clones
+ *								- CLONALG2 - new generation will be formed by the best (1-d)*populationSize clones ( or all if the number of clones is less than that )
+ *          - birthPhase: where d * populationSize of new antibodies are randomly created and added to the population for diversification
  *							
- * CLONALG algorithm accepts only a single FloatingPoint genotype (vector of real values).
+ * CLONALG algorithm accepts only a single FloatingPoint genotype
+ * Additionally, if chosen, selectionScheme CLONALG2 adds a FloatingPoint genotype  (parentAntibody) to mark which clone came from which antibods 
  */
 class MyAlg : public Algorithm
 {
@@ -22,6 +26,7 @@ protected:
 		double beta;			// parameter which determines the number of clones for every antibody
 		double c;				// da uzmem iz postojeceg mutation parametra mutation parametar
 		double d;				// fraction of population regenerated every generation
+		string cloningVersion;	// specifies whether to use static or proportional cloning
 		string selectionScheme;	// specifies which selection scheme to use CLONALG1 or CLONALG2
 
 		// sort vector of antibodies in regards to their fitness
@@ -53,8 +58,9 @@ public:
         {	
 			registerParameter(state, "n", (voidP) new uint(50), ECF::INT);
 			registerParameter(state, "beta", (voidP) new double(0.1), ECF::DOUBLE);
-			registerParameter(state, "c", (voidP) new double(0.8), ECF::DOUBLE);
+			registerParameter(state, "c", (voidP) new double(0.2), ECF::DOUBLE);
 			registerParameter(state, "d", (voidP) new double(0.0), ECF::DOUBLE);
+			registerParameter(state, "cloningVersion", (voidP) new string("static"), ECF::STRING);
 			registerParameter(state, "selectionScheme", (voidP) new string("CLONALG2"), ECF::STRING);
 		}
 
@@ -102,6 +108,12 @@ public:
 				ECF_LOG(state, 1, "Error: CLONALG requires parameter 'd' to be a double in range [ 0, 1] ");
 				throw "";}
 
+			voidP cloning_ = getParameterValue(state, "cloningVersion");
+			cloningVersion = *((string*) cloning_.get());
+			if( cloningVersion != "static" && cloningVersion != "proportional"  ) {
+				ECF_LOG(state, 1, "Error: CLONALG requires parameter 'cloningVersion' to be either 'static' or a 'proportional'");
+				throw "";}
+
 			voidP selection_ = getParameterValue(state, "selectionScheme");
 			selectionScheme = *((string*) selection_.get());
 			if( selectionScheme != "CLONALG1" && selectionScheme != "CLONALG2"  ) {
@@ -139,7 +151,7 @@ public:
         bool advanceGeneration(StateP state, DemeP deme)
         {	
 			  std::vector<IndividualP> clones;
-			  if (selectionScheme == "CLONALG1" && state->getGenerationNo()== 0)
+			  if (selectionScheme == "CLONALG1")
 				 markAntibodies(deme);
 			  cloningPhase(state, deme, clones);
 			  hypermutationPhase(state, deme, clones);
@@ -154,7 +166,7 @@ public:
 		bool markAntibodies(DemeP deme){
 			//mark antibodies so the alg can know which clone belongs to which parent Antibody
 			for( uint i = 0; i < deme->getSize(); i++ ) { // for each antibody
-			
+
 					FloatingPointP flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (deme->at(i)->getGenotype(1));
 					double &parentAb = flp->realValue[0];
 					parentAb = i;				
@@ -180,25 +192,39 @@ public:
 			// leaving n best antibodies for cloning
 			clones.erase (clones.begin()+n,clones.end());
 
-			//static cloning : cloning each antibody beta*populationSize times
+			
 			for( uint i = 0; i < n; i++ ){ // for each antibody in clones vector
 				IndividualP antibody = clones.at(i);
 			
-				for (uint j = 0; j < clonesPerAntibody; j++) 
-					clones.push_back(copy(antibody));
+				//static cloning : cloning each antibody beta*populationSize times
+				if (cloningVersion == "static"){
+					for (uint j = 0; j < clonesPerAntibody; j++) 
+						clones.push_back(copy(antibody));
+				}
+
+				//proportional cloning 
+				else{ 
+					uint proportionalCloneNo = clonesPerAntibody/(i+1);
+					for (uint j = 0; j < proportionalCloneNo ; j++) 
+						clones.push_back(copy(antibody));
+				}
 		    }
 			
 			return true;
 		}
 
 		bool hypermutationPhase(StateP state, DemeP deme, std::vector<IndividualP> &clones)
-		{	
-			// calculate number of clones per antibody
-			uint clonesPerAntibody = beta * deme->getSize() +1;
-			
+		{			
 			uint M;	// M - number of mutations of a single antibody 
 			uint k;
 
+			// calculate number of clones per antibody
+			uint clonesPerAntibody = beta * deme->getSize();
+
+			// these get used in case of proportional cloning
+			uint counter = 0;		
+			uint parentIndex = 0;
+			
 			for( uint i = 0; i < clones.size(); i++ ){ // for each antibody in vector clones
 				IndividualP antibody = clones.at(i);
 				
@@ -206,10 +232,18 @@ public:
 			    std::vector< double > &antibodyVars = flp->realValue;
 				
 				// inversely proportional hypermutation (better antibodies are mutated less)
-				k = i/clonesPerAntibody +1;
+				if (cloningVersion == "static")
+					k = 1+ i/(clonesPerAntibody +1);
+				else{
+					if (counter == i){
+						parentIndex++;
+						counter += 1 + clonesPerAntibody/parentIndex;
+					}					
+					k = parentIndex;
+				}
+
 				M = (int) ((1- 1/(double)(k)) * (c*dimension) + (c*dimension));
-				
-				
+								
 				// mutate M times
 				for (uint j = 0; j < M; j++){
 					uint param = state->getRandomizer()->getRandomInteger((int)antibodyVars.size());
@@ -226,10 +260,7 @@ public:
 					//produce a mutation on the antibody 
 					antibodyVars[param] = value;
 				}
-				
-				FitnessP originalFitness = antibody->fitness;
 				evaluate(antibody);
-
 			}		
 			return true;
 		}
@@ -246,23 +277,21 @@ public:
 				for (uint i = 0; i < clones.size(); i++){
 					FloatingPointP flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (clones.at(i)->getGenotype(1));
 					double &parentAb = flp->realValue[0];
-					if (j == parentAb && j < selNumber){
+					if (j == parentAb && j < deme->getSize()){
 						temp_clones.push_back(clones.at(i));
 						j++;
 					}
 				}
 				clones = temp_clones;				
 			}
+	
+			std::sort (clones.begin(), clones.end(), sortPopulationByFitness);
+			uint selNumber = (uint)((1-d)*deme->getSize());
 
-
-			else{
-				std::sort (clones.begin(), clones.end(), sortPopulationByFitness);
-				uint selNumber = (uint)((1-d)*deme->getSize());
-
-				//keep best (1-d)*populationSize antibodies ( or all if the number of clones is less than that )
-				if(selNumber < clones.size())
-					clones.erase (clones.begin()+ selNumber, clones.end());
-			}
+			//keep best (1-d)*populationSize antibodies ( or all if the number of clones is less than that )
+			if(selNumber < clones.size())
+				clones.erase (clones.begin()+ selNumber, clones.end());
+			
 
 			return true;
 		}
@@ -271,10 +300,7 @@ public:
 		{	
 			//  birthNumber - number of new antibodies randomly created and added 
 			uint birthNumber = deme->getSize() - clones.size();
-			//mark the newAntibody's paretntAb 
-			uint mark = clones.size();
-
-
+			
 			IndividualP newAntibody = copy(deme->at(0));
 			FloatingPointP flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (newAntibody->getGenotype(0));
 
@@ -282,13 +308,6 @@ public:
 				//create a random antibody
 				flp->initialize(state);
 				evaluate(newAntibody);
-
-				if (selectionScheme == "CLONALG1"){
-					//mark ab's parentAb
-					flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (newAntibody->getGenotype(1));
-					double &parentAb = flp->realValue[0];
-					parentAb = mark++;
-				}
 
 				//add it to the clones vector
 				clones.push_back(copy(newAntibody));
