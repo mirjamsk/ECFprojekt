@@ -179,20 +179,21 @@ public:
 
 		bool agingPhase(StateP state, DemeP deme,  std::vector<IndividualP> &clones)
 		{	
-			for(std::vector<IndividualP>::iterator it = clones.begin(); it != clones.end();){// for each antibody
-				IndividualP antibody = *it;
+			std::vector<IndividualP> temp_clones;
+
+			for (uint i = 0; i < clones.size(); i++){// for each antibody
+				IndividualP antibody = clones.at(i);
 
 				//age each antibody
 				FloatingPointP flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (antibody->getGenotype(1));
 				double &age = flp->realValue[0];
 				age += 1;
-
+				
 				// static aging: if an antibody exceeds tauB number of trials, it is replaced with a new randomly created antibody
-				if (age >tauB)
-					it = clones.erase(it); 
-				else
-					it++;			  
+				if (age <=tauB)
+					temp_clones.push_back(antibody);		  
 			}
+			clones = temp_clones;
 			return true;
 		}
 
