@@ -180,18 +180,14 @@ public:
 			uint clonesPerAntibody = beta * deme->getSize();
 
 			// storing all antibodies in a vector
-			for( uint i = 0; i < deme->getSize(); i++ ) { // for each antibody	
-				
-				IndividualP antibody = deme->at(i);
-				clones.push_back(antibody);
-			}
+			for( uint i = 0; i < deme->getSize(); i++ )  // for each antibody	
+				clones.push_back(deme->at(i));
 
 			// sorting all antibodies
 			std::sort (clones.begin(), clones.end(), sortPopulationByFitness);
 			
 			// leaving n best antibodies for cloning
 			clones.erase (clones.begin()+n,clones.end());
-
 			
 			for( uint i = 0; i < n; i++ ){ // for each antibody in clones vector
 				IndividualP antibody = clones.at(i);
