@@ -6,7 +6,7 @@
  *							- inversely proportional hypermutation : better antibodies are mutated less
  *							- static pure aging - if an antibody exceeds tauB number of trials, it is replaced with a new randomly created antibody
  *							- birthPhase: if the number of antibodies that survive the aging Phase is less than populationSize, new randomly created abs are added to the population
- * 
+ *							- optional elitism
  * opt-IA algorithm accepts only a single FloatingPoint genotype
  * Additionally, opt-IA adds a FloatingPoint genotype (age) 
  */
@@ -21,7 +21,8 @@ protected:
 		uint dup;		// number of clones per antibody
 		double c;		// mutation parameter
 		double tauB;	// maximum number of generations without improvement 
-		
+		string elitism;	// specifies whether to use elitism or not
+
 		// sort vector of antibodies in regards to their fitness
 		static bool sortPopulationByFitness (IndividualP ab1,IndividualP ab2) { return ( ab1->fitness->isBetterThan(ab2->fitness)); }
 public:
@@ -38,6 +39,7 @@ public:
 			registerParameter(state, "dup", (voidP) new uint(10), ECF::INT);
 			registerParameter(state, "c", (voidP) new double(0.2), ECF::DOUBLE);
 			registerParameter(state, "tauB", (voidP) new double(100), ECF::DOUBLE);
+			registerParameter(state, "elitism", (voidP) new string("false"), ECF::STRING);
 		}
 
 
@@ -69,6 +71,13 @@ public:
 			if( tauB < 0 ) {
 				ECF_LOG(state, 1, "Error: opt-IA requires parameter 'tauB' to be a nonnegative double value");
 				throw "";}
+
+			voidP elitism_ = getParameterValue(state, "elitism");
+			elitism = *((string*) elitism_.get());
+			if( elitism != "true" && elitism != "false"  ) {
+				ECF_LOG(state, 1,  "Error: opt-IA requires parameter 'elitism' to be either 'true' or 'false'");
+				throw "";}
+
 
 			// algorithm accepts a single FloatingPoint Genotype
 			FloatingPointP flp (new FloatingPoint::FloatingPoint);
@@ -113,10 +122,8 @@ public:
 		bool cloningPhase(StateP state, DemeP deme, std::vector<IndividualP> &clones)
 		{
 			// storing all antibodies in a vector
-			for( uint i = 0; i < deme->getSize(); i++ ) { // for each antibody	
-				IndividualP antibody = deme->at(i);
-				clones.push_back(antibody);
-			}
+			for( uint i = 0; i < deme->getSize(); i++ )  // for each antibody	
+				clones.push_back(deme->at(i));
 
 			for( uint i = 0; i < deme->getSize(); i++ ){ // for each antibody in clones vector
 				IndividualP antibody = clones.at(i);
@@ -179,7 +186,14 @@ public:
 
 		bool agingPhase(StateP state, DemeP deme,  std::vector<IndividualP> &clones)
 		{	
+			//sort 
+			std::sort (clones.begin(), clones.end(), sortPopulationByFitness);
+
 			std::vector<IndividualP> temp_clones;
+
+			// if elitism = true , preserve the best antibody regardless of its age
+			if (elitism == "true")
+				temp_clones.push_back(clones.at(0));
 
 			for (uint i = 0; i < clones.size(); i++){// for each antibody
 				IndividualP antibody = clones.at(i);
