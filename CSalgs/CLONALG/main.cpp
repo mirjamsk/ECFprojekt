@@ -24,7 +24,7 @@ protected:
 
 		uint n;					// number of antibodies cloned every generation
 		double beta;			// parameter which determines the number of clones for every antibody
-		double c;				// da uzmem iz postojeceg mutation parametra mutation parametar
+		double c;				// mutation parameter
 		double d;				// fraction of population regenerated every generation
 		string cloningVersion;	// specifies whether to use static or proportional cloning
 		string selectionScheme;	// specifies which selection scheme to use CLONALG1 or CLONALG2
@@ -32,7 +32,7 @@ protected:
 		// sort vector of antibodies in regards to their fitness
 		static bool sortPopulationByFitness (IndividualP ab1,IndividualP ab2) { return ( ab1->fitness->isBetterThan(ab2->fitness)); }
 
-		// sort vector of antibodies first by their antibody parents and then to their fitness
+		// sort vector of antibodies first by their antibody parents and then by their fitness
 		static bool sortPopulationByParentAndFitness (IndividualP ab1,IndividualP ab2) 
 		{ 
 			FloatingPointP flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (ab1->getGenotype(1));
@@ -84,7 +84,7 @@ public:
 			voidP n_ = getParameterValue(state, "n");
 			n = *((uint*) n_.get());
 			if( n<1 || n>populationSize) {
-				ECF_LOG(state, 1, "Error: CLONALG requires parameter 'n' to be an integer in range < 0, population.size] ");
+				ECF_LOG(state, 1, "Error: CLONALG requires parameter 'n' to be an integer in range <0, population.size] ");
 				throw "";}
 
 
@@ -105,7 +105,7 @@ public:
 			voidP d_ = getParameterValue(state, "d");
 			d = *((double*) d_.get());
 			if( d<0 || d>1 ) {
-				ECF_LOG(state, 1, "Error: CLONALG requires parameter 'd' to be a double in range [ 0, 1] ");
+				ECF_LOG(state, 1, "Error: CLONALG requires parameter 'd' to be a double in range [0, 1] ");
 				throw "";}
 
 			voidP cloning_ = getParameterValue(state, "cloningVersion");
@@ -180,18 +180,14 @@ public:
 			uint clonesPerAntibody = beta * deme->getSize();
 
 			// storing all antibodies in a vector
-			for( uint i = 0; i < deme->getSize(); i++ ) { // for each antibody	
-				
-				IndividualP antibody = deme->at(i);
-				clones.push_back(antibody);
-			}
+			for( uint i = 0; i < deme->getSize(); i++ )  // for each antibody	
+				clones.push_back(deme->at(i));
 
 			// sorting all antibodies
 			std::sort (clones.begin(), clones.end(), sortPopulationByFitness);
 			
 			// leaving n best antibodies for cloning
 			clones.erase (clones.begin()+n,clones.end());
-
 			
 			for( uint i = 0; i < n; i++ ){ // for each antibody in clones vector
 				IndividualP antibody = clones.at(i);
@@ -215,6 +211,9 @@ public:
 
 		bool hypermutationPhase(StateP state, DemeP deme, std::vector<IndividualP> &clones)
 		{			
+			// sorting all antibodies
+			std::sort (clones.begin(), clones.end(), sortPopulationByFitness);
+
 			uint M;	// M - number of mutations of a single antibody 
 			uint k;
 
@@ -268,30 +267,29 @@ public:
 		bool selectionPhase(StateP state, DemeP deme, std::vector<IndividualP> &clones)
 		{	
 			if( selectionScheme == "CLONALG1") {
-				uint selNumber = (uint)((1-d)*deme->getSize());
+				
 				std::sort (clones.begin(), clones.end(), sortPopulationByParentAndFitness);
 			
-				int j=0;
+				int formerParent = -1;
 				std::vector<IndividualP> temp_clones;
 
 				for (uint i = 0; i < clones.size(); i++){
 					FloatingPointP flp = boost::dynamic_pointer_cast<FloatingPoint::FloatingPoint> (clones.at(i)->getGenotype(1));
 					double &parentAb = flp->realValue[0];
-					if (j == parentAb && j < deme->getSize()){
+					if (formerParent != parentAb){
 						temp_clones.push_back(clones.at(i));
-						j++;
+						formerParent = parentAb;
 					}
 				}
 				clones = temp_clones;				
 			}
-	
+
 			std::sort (clones.begin(), clones.end(), sortPopulationByFitness);
 			uint selNumber = (uint)((1-d)*deme->getSize());
 
 			//keep best (1-d)*populationSize antibodies ( or all if the number of clones is less than that )
 			if(selNumber < clones.size())
 				clones.erase (clones.begin()+ selNumber, clones.end());
-			
 
 			return true;
 		}
@@ -311,8 +309,7 @@ public:
 
 				//add it to the clones vector
 				clones.push_back(copy(newAntibody));
-			}
-			
+			}			
 			return true;
 		}
 
@@ -326,8 +323,6 @@ public:
 			
 			return true;
 		}
-
-
 
 };
 typedef boost::shared_ptr<MyAlg> MyAlgP;
