@@ -191,10 +191,6 @@ public:
 
 			std::vector<IndividualP> temp_clones;
 
-			// if elitism = true , preserve the best antibody regardless of its age
-			if (elitism == "true")
-				temp_clones.push_back(clones.at(0));
-
 			for (uint i = 0; i < clones.size(); i++){// for each antibody
 				IndividualP antibody = clones.at(i);
 
@@ -205,7 +201,10 @@ public:
 				
 				// static aging: if an antibody exceeds tauB number of trials, it is replaced with a new randomly created antibody
 				if (age <=tauB)
-					temp_clones.push_back(antibody);		  
+					temp_clones.push_back(antibody);
+				// if elitism = true , preserve the best antibody regardless of its age
+				else if (elitism == "true" && i == 0)
+					temp_clones.push_back(antibody);
 			}
 			clones = temp_clones;
 			return true;

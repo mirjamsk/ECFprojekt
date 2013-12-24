@@ -4,7 +4,7 @@
 			<Entry key="n">100</Entry>
 			<Entry key="beta">1</Entry>
 			<Entry key="c">0.1</Entry>
-			<Entry key="d">0.1</Entry>
+			<Entry key="d">0.0</Entry>
 			<Entry key="cloningVersion">proportional</Entry>
 			<Entry key="selectionScheme">CLONALG2</Entry>
 		</MyAlg>
