@@ -8,6 +8,7 @@ Algorithms implemented :
 	Optimization Immune Algorithm (opt-IA) 
 
 
+Also it contains post-processed data acquired using COCO
 ==========
 important: main.cpps are from ECF_1.3/examples/COCO/
 

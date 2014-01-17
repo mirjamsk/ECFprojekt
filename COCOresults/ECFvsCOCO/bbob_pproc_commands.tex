@@ -1,0 +1,91 @@
+\providecommand{\bbobppfigsftarget}{\ensuremath{10^{-8}}}
+\providecommand{\bbobppfigslegend}[1]{
+Expected running time (\ERT\ in number of $f$-evaluations) divided by dimension for target function value \bbobppfigsftarget\ as $\log_{10}$ values versus dimension. Different symbols correspond to different algorithms given in the legend of #1. Light symbols give the maximum number of function evaluations from the longest trial divided by dimension. Horizontal lines give linear scaling, slanted dotted lines give quadratic scaling. Black stars indicate statistically better result compared to all other algorithms with $p<0.01$ and Bonferroni correction number of dimensions (six).  
+Legend: 
+{\color{blue}$\circ$}:\algorithmA
+, {\color{red}$\triangledown$}:\algorithmB
+, {\color{cyan}$\star$}:\algorithmC
+, {\color{magenta}$\Box$}:\algorithmD
+, {\color{black}$\triangle$}:\algorithmE
+, {\color{yellow}$\diamondsuit$}:\algorithmF
+, {\color{green!45!black}$\varhexagon$}:\algorithmG
+, {\color{blue}$\pentagon$}:\algorithmH
+, {\color{red}$\hexagon$}:\algorithmI
+, {\color{cyan}$\triangleleft$}:\algorithmJ
+, {\color{magenta}$\Diamond$}:\algorithmK
+, {\color{black}$\downY$}:\algorithmL
+, {\color{yellow}$\upY$}:\algorithmM
+, {\color{green!45!black}$\leftY$}:\algorithmN
+, {\color{green!45!black}$\rightY$}:\algorithmO
+, {\color{blue}$\circ$}:\algorithmP
+, {\color{red}$\triangledown$}:\algorithmQ
+, {\color{cyan}$\star$}:\algorithmR
+, {\color{magenta}$\Box$}:\algorithmS
+, {\color{black}$\triangle$}:\algorithmT
+, {\color{yellow}$\diamondsuit$}:\algorithmU
+, {\color{green!45!black}$\varhexagon$}:\algorithmV
+, {\color{blue}$\pentagon$}:\algorithmW
+, {\color{red}$\hexagon$}:\algorithmX
+, {\color{cyan}$\triangleleft$}:\algorithmY
+, {\color{magenta}$\Diamond$}:\algorithmZ
+, {\color{black}$\downY$}:\algorithma
+, {\color{yellow}$\upY$}:\algorithmb
+, {\color{green!45!black}$\leftY$}:\algorithmc
+, {\color{green!45!black}$\rightY$}:\algorithmd
+, {\color{blue}$\circ$}:\algorithme
+, {\color{red}$\triangledown$}:\algorithmf
+, {\color{cyan}$\star$}:\algorithmg
+, {\color{magenta}$\Box$}:\algorithmh
+, {\color{black}$\triangle$}:\algorithmi
+, {\color{yellow}$\diamondsuit$}:\algorithmj
+, {\color{green!45!black}$\varhexagon$}:\algorithmk
+, {\color{blue}$\pentagon$}:\algorithml
+, {\color{red}$\hexagon$}:\algorithmm
+}
+\providecommand{\bbobpptablesmanylegend}[1]{Expected running time (ERT in number of function evaluations)
+                     divided by the respective best ERT measured during BBOB-2009 (given in 
+                     the respective first row) for different $\Df$ values in #1. 
+                     The central 80\% range divided by two is given in braces. 
+                     The median number of conducted function evaluations is additionally given in 
+                     \textit{italics}, if $\ERT(10^{-7}) = \infty$.
+                     \#succ is the number of trials that reached the final target $\fopt + 10^{-8}$.
+                     Best results are printed in bold. }
+\providecommand{\algorithmA}{ECFdata/ECF\_ABC}
+\providecommand{\algorithmB}{ECFdata/ECF\_CLONALG2\_static}
+\providecommand{\algorithmC}{ECFdata/ECF\_DifferentialEvolution}
+\providecommand{\algorithmD}{ECFdata/ECF\_Elimination}
+\providecommand{\algorithmE}{ECFdata/ECF\_GeneticAnnealing}
+\providecommand{\algorithmF}{ECFdata/ECF\_opt-IA}
+\providecommand{\algorithmG}{ECFdata/ECF\_ParticleSwarmOptimization}
+\providecommand{\algorithmH}{ECFdata/ECF\_RouletteWheel}
+\providecommand{\algorithmI}{ECFdata/ECF\_SteadyStateTournament}
+\providecommand{\algorithmJ}{rawdata/BIPOP-aCMA-STEP}
+\providecommand{\algorithmK}{rawdata/BIPOP-saACM-k}
+\providecommand{\algorithmL}{rawdata/HCMA}
+\providecommand{\algorithmM}{rawdata/holtschulte2013\_ga100}
+\providecommand{\algorithmN}{rawdata/holtschulte2013\_grid100}
+\providecommand{\algorithmO}{rawdata/holtschulte2013\_grid16}
+\providecommand{\algorithmP}{rawdata/holtschulte2013\_hill}
+\providecommand{\algorithmQ}{rawdata/holtschulte2013\_ring100}
+\providecommand{\algorithmR}{rawdata/holtschulte2013\_ring16}
+\providecommand{\algorithmS}{rawdata/hutter2013\_CMAES}
+\providecommand{\algorithmT}{rawdata/hutter2013\_SMAC}
+\providecommand{\algorithmU}{rawdata/liao2013\_IPOP}
+\providecommand{\algorithmV}{rawdata/liao2013\_IPOP-10DDr}
+\providecommand{\algorithmW}{rawdata/liao2013\_IPOP-500}
+\providecommand{\algorithmX}{rawdata/liao2013\_IPOP-tany}
+\providecommand{\algorithmY}{rawdata/liao2013\_IPOP-texp}
+\providecommand{\algorithmZ}{rawdata/lmmcmaes}
+\providecommand{\algorithma}{rawdata/pal2013\_DE}
+\providecommand{\algorithmb}{rawdata/pal2013\_fmincon}
+\providecommand{\algorithmc}{rawdata/pal2013\_fminunc}
+\providecommand{\algorithmd}{rawdata/pal2013\_HMLSL}
+\providecommand{\algorithme}{rawdata/pal2013\_MLSL}
+\providecommand{\algorithmf}{rawdata/pal2013\_OQNLP}
+\providecommand{\algorithmg}{rawdata/pal2013\_simplex}
+\providecommand{\algorithmh}{rawdata/P-DCN}
+\providecommand{\algorithmi}{rawdata/P-zero}
+\providecommand{\algorithmj}{rawdata/sawyerr2013\_prcga}
+\providecommand{\algorithmk}{rawdata/U-DCN}
+\providecommand{\algorithml}{rawdata/U-zero}
+\providecommand{\algorithmm}{rawdata/voglis2013\_memPSODE}
