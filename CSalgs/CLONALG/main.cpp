@@ -12,7 +12,7 @@
  *          - birthPhase: where d * populationSize of new antibodies are randomly created and added to the population for diversification
  *							
  * CLONALG algorithm accepts only a single FloatingPoint genotype
- * Additionally, if chosen, selectionScheme CLONALG2 adds a FloatingPoint genotype  (parentAntibody) to mark which clone came from which antibods 
+ * Additionally, if chosen, selectionScheme CLONALG1 adds a FloatingPoint genotype  (parentAntibody) to mark which clone came from which antibods 
  */
 class MyAlg : public Algorithm
 {
